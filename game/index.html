@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Extreme City Car Driving 3D</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Local Bundled Three.js Engine for Offline Mobile Play -->
+    <script src="js/three.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="webgl-canvas"></canvas>
+
+        <!-- Dynamic HUD Overlay -->
+        <div id="hud">
+            <!-- Top Bar: Game Info & Transmission Switcher -->
+            <div id="top-bar">
+                <div class="hud-card">
+                    <span class="label">TRANS:</span>
+                    <button id="btn-toggle-trans" class="mode-badge auto">AUTO (PRND)</button>
+                </div>
+                <div class="hud-card">
+                    <span class="label">CAMERA:</span>
+                    <button id="btn-camera-switch" class="btn-action">CHASE 1</button>
+                </div>
+                <div class="hud-card gamepad-status" id="gamepad-badge">
+                    <span class="dot"></span> <span id="gamepad-name">TOUCH / KEYBOARD</span>
+                </div>
+            </div>
+
+            <!-- Mini Map (Top Left) -->
+            <div id="minimap-container">
+                <canvas id="minimap-canvas" width="120" height="120"></canvas>
+            </div>
+
+            <!-- Speedometer & Tachometer Cluster (Bottom Center) -->
+            <div id="cluster">
+                <div class="gauge tachometer">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="42"></circle>
+                        <circle id="rpm-arc" class="value" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                    </svg>
+                    <div class="gauge-value">
+                        <span id="rpm-value">0</span>
+                        <span class="unit">RPM</span>
+                    </div>
+                </div>
+
+                <div class="digital-center">
+                    <div id="gear-display" class="gear-badge">D</div>
+                    <div id="speed-value" class="speed-number">0</div>
+                    <div class="speed-unit">KM/H</div>
+                </div>
+
+                <div class="gauge speedometer">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="42"></circle>
+                        <circle id="speed-arc" class="value" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                    </svg>
+                    <div class="gauge-value">
+                        <span id="traffic-count">24</span>
+                        <span class="unit">CARS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Transmission Gear Buttons (Hidden in Auto Mode) -->
+            <div id="manual-controls" class="hidden">
+                <button id="btn-shift-up" class="shift-btn">+ GEAR</button>
+                <button id="btn-shift-down" class="shift-btn">- GEAR</button>
+                <div class="clutch-bar-container">
+                    <div class="clutch-label">CLUTCH</div>
+                    <div id="clutch-fill" class="clutch-fill"></div>
+                </div>
+            </div>
+
+            <!-- Touch Steering & Pedals Controls (For Mobile) -->
+            <div id="touch-controls">
+                <div id="touch-steering-container">
+                    <div id="touch-wheel"></div>
+                </div>
+
+                <div id="touch-pedals">
+                    <div id="pedal-brake" class="pedal brake">BRAKE / REV</div>
+                    <div id="pedal-accel" class="pedal accel">GAS</div>
+                </div>
+            </div>
+
+            <!-- Gamepad Hint Overlay -->
+            <div id="gamepad-hint" class="hud-hint">
+                <span>🎮 <b>Gamepad Connected!</b> LS: Steer | RT: Gas | LT: Brake | RB/LB: Gear Shift | Y: Camera</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Game Scripts -->
+    <script src="js/city.js"></script>
+    <script src="js/car.js"></script>
+    <script src="js/transmission.js"></script>
+    <script src="js/traffic.js"></script>
+    <script src="js/gamepad.js"></script>
+    <script src="js/hud.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
