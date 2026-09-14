@@ -6,6 +6,7 @@ const fs = require('fs');
 const server = http.createServer((req, res) => {
     let filePath = path.join(__dirname, '..', 'game', req.url === '/' ? 'index.html' : req.url);
     if (!fs.existsSync(filePath)) {
+        console.log('404 NOT FOUND:', req.url, '->', filePath);
         res.writeHead(404);
         res.end('Not Found');
         return;

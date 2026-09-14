@@ -47,11 +47,9 @@ server.listen(8087, async () => {
             const vehicleCount = traffic.vehicles.length;
             const firstCarPos1 = traffic.vehicles[0].mesh.position.x;
 
-            // Step traffic physics
             traffic.update(0.1, window.gameInstance.car.position);
             const firstCarPos2 = traffic.vehicles[0].mesh.position.x;
 
-            // Test Gamepad poll
             const gpInputs = gamepadMgr.pollInputs();
 
             return {

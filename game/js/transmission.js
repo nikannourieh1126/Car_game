@@ -19,7 +19,7 @@ class Transmission {
         this.reverseRatio = 3.65;
         this.finalDrive = 3.55;
 
-        // Clutch state (0 = fully disengaged, 1 = fully engaged)
+        // Clutch state
         this.clutch = 1.0;
         this.isStalled = false;
     }
@@ -39,7 +39,6 @@ class Transmission {
     shiftUp() {
         if (this.currentGear < 6) {
             this.currentGear++;
-            // Temporary drop in RPM when shifting up
             this.rpm = Math.max(this.idleRpm, this.rpm * 0.65);
         }
     }
@@ -47,7 +46,6 @@ class Transmission {
     shiftDown() {
         if (this.currentGear > -1) {
             this.currentGear--;
-            // Blip RPM up when shifting down (rev matching)
             this.rpm = Math.min(this.maxRpm, this.rpm * 1.35);
         }
     }
@@ -56,26 +54,21 @@ class Transmission {
         const speedMps = Math.abs(this.car.speed);
         const speedKmh = this.car.getSpeedKmH();
 
-        // Calculate Engine RPM based on current gear and wheel speed
         const activeRatio = (this.currentGear === -1) ? this.reverseRatio : (this.gearRatios[Math.max(0, this.currentGear)] || 1.0);
 
-        // Wheel RPM to Engine RPM formula: RPM = (speed_m_s / tire_perimeter) * 60 * gear_ratio * final_drive
-        const tireRadius = 0.38; // meters
+        const tireRadius = 0.40; // meters
         const wheelRpm = (speedMps / (2 * Math.PI * tireRadius)) * 60;
         const calculatedRpm = wheelRpm * activeRatio * this.finalDrive;
 
-        // Automatic Transmission Shift Logic
         if (this.mode === 'AUTO') {
             if (this.car.brakeInput > 0 && speedKmh < 2 && this.car.throttleInput === 0) {
-                // Stopped / Reverse logic in Auto
                 if (this.car.brakeInput > 0.5 && speedKmh < 0.5) {
-                    this.currentGear = -1; // Reverse gear when holding brake at standstill
+                    this.currentGear = -1;
                 }
             } else if (this.car.throttleInput > 0 && this.currentGear === -1 && speedKmh < 1) {
-                this.currentGear = 1; // Auto switch back to forward Drive gear
+                this.currentGear = 1;
             }
 
-            // Auto gear shifting up/down based on RPM
             if (this.currentGear >= 1 && this.currentGear < 6 && this.rpm > this.shiftUpRpm) {
                 this.shiftUp();
             } else if (this.currentGear > 1 && this.rpm < this.shiftDownRpm && speedKmh > 5) {
@@ -83,16 +76,13 @@ class Transmission {
             }
         }
 
-        // Engine RPM calculation
         if (this.currentGear === 0) {
-            // Neutral gear: Rev engine freely with throttle
             if (this.car.throttleInput > 0) {
                 this.rpm += this.car.throttleInput * 12000 * dt;
             } else {
                 this.rpm -= 4000 * dt;
             }
         } else {
-            // In gear: blend calculated RPM with throttle input
             const targetRpm = Math.max(this.idleRpm, calculatedRpm);
             if (this.car.throttleInput > 0) {
                 this.rpm += (targetRpm + this.car.throttleInput * 2500 - this.rpm) * Math.min(1.0, dt * 10.0);
@@ -101,22 +91,17 @@ class Transmission {
             }
         }
 
-        // Clamp RPM
         this.rpm = THREE.MathUtils.clamp(this.rpm, this.idleRpm, this.maxRpm);
 
-        // Drive Force output to drive wheels
         let driveForce = 0;
         if (this.currentGear !== 0) {
             const gearFactor = activeRatio * this.finalDrive * 0.35;
-            // Torque curve simulation: Peak torque around 4500 RPM
             const rpmNormalized = this.rpm / this.maxRpm;
-            const torqueMultiplier = Math.sin(rpmNormalized * Math.PI); // Smooth torque arc
+            const torqueMultiplier = Math.sin(rpmNormalized * Math.PI);
 
             if (this.currentGear === -1) {
-                // Reverse direction
                 driveForce = - (this.car.throttleInput || (this.mode === 'AUTO' ? this.car.brakeInput : 0)) * this.car.enginePower * gearFactor * 18.0;
             } else {
-                // Forward direction
                 driveForce = this.car.throttleInput * this.car.enginePower * gearFactor * torqueMultiplier * 20.0;
             }
         }

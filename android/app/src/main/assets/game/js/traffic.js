@@ -12,17 +12,17 @@ class TrafficSystem {
 
     initMaterials() {
         this.carColors = [
-            0x3a7bd5, // Blue Sedan
-            0xe74c3c, // Red Hatchback
-            0x2ecc71, // Green SUV
-            0xf1c40f, // Yellow Taxi
-            0x9b59b6, // Purple Coupe
-            0x34495e, // Dark Gray Sedan
-            0xe67e22, // Orange Crossover
-            0xecf0f1  // White Pearl
+            0x3a7bd5, // Sapphire Blue
+            0xe74c3c, // Crimson Red
+            0x2ecc71, // Emerald Green
+            0xf1c40f, // Canary Yellow
+            0x9b59b6, // Deep Purple
+            0x34495e, // Metallic Slate
+            0xe67e22, // Sunset Orange
+            0xecf0f1  // Pearl White
         ];
 
-        this.windowMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2 });
+        this.windowMaterial = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.1, metalness: 0.8 });
     }
 
     spawnTraffic() {
@@ -35,7 +35,6 @@ class TrafficSystem {
 
             const vehicleMesh = this.createNpcCarMesh(color);
 
-            // Random initial position along lane
             let posX = 0, posZ = 0, rotY = 0;
             const dist = (Math.random() - 0.5) * 350;
 
@@ -69,37 +68,37 @@ class TrafficSystem {
 
         const bodyMat = new THREE.MeshStandardMaterial({
             color: colorHex,
-            metalness: 0.6,
-            roughness: 0.3
+            metalness: 0.7,
+            roughness: 0.2
         });
 
-        // Chassis Lower
-        const chassisGeo = new THREE.BoxGeometry(1.9, 0.65, 4.2);
+        // Chassis
+        const chassisGeo = new THREE.BoxGeometry(1.95, 0.65, 4.3);
         const chassis = new THREE.Mesh(chassisGeo, bodyMat);
         chassis.position.y = 0.5;
         chassis.castShadow = true;
         carGroup.add(chassis);
 
-        // Cabin Upper
-        const cabinGeo = new THREE.BoxGeometry(1.5, 0.5, 2.1);
+        // Cabin
+        const cabinGeo = new THREE.BoxGeometry(1.5, 0.52, 2.2);
         const cabin = new THREE.Mesh(cabinGeo, bodyMat);
-        cabin.position.set(0, 1.0, -0.2);
+        cabin.position.set(0, 1.02, -0.2);
         carGroup.add(cabin);
 
         // Windows
-        const winGeo = new THREE.BoxGeometry(1.48, 0.45, 2.0);
+        const winGeo = new THREE.BoxGeometry(1.48, 0.48, 2.1);
         const win = new THREE.Mesh(winGeo, this.windowMaterial);
-        win.position.set(0, 1.01, -0.2);
+        win.position.set(0, 1.03, -0.2);
         carGroup.add(win);
 
         // Wheels
-        const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12);
+        const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.26, 16);
         wheelGeo.rotateZ(Math.PI / 2);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.5 });
 
         const wheelPositions = [
-            [-0.9, 0.35, 1.2], [0.9, 0.35, 1.2],
-            [-0.9, 0.35, -1.2], [0.9, 0.35, -1.2]
+            [-0.92, 0.36, 1.25], [0.92, 0.36, 1.25],
+            [-0.92, 0.36, -1.25], [0.92, 0.36, -1.25]
         ];
 
         wheelPositions.forEach(p => {
@@ -108,25 +107,25 @@ class TrafficSystem {
             carGroup.add(w);
         });
 
-        // Headlights & Tail Lights
+        // Lights
         const headGeo = new THREE.BoxGeometry(0.3, 0.12, 0.08);
         const headMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const leftHead = new THREE.Mesh(headGeo, headMat);
-        leftHead.position.set(-0.65, 0.5, 2.11);
+        leftHead.position.set(-0.65, 0.5, 2.16);
         carGroup.add(leftHead);
 
         const rightHead = leftHead.clone();
-        rightHead.position.set(0.65, 0.5, 2.11);
+        rightHead.position.set(0.65, 0.5, 2.16);
         carGroup.add(rightHead);
 
         const tailGeo = new THREE.BoxGeometry(0.3, 0.12, 0.08);
         const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1111 });
         const leftTail = new THREE.Mesh(tailGeo, tailMat);
-        leftTail.position.set(-0.65, 0.5, -2.11);
+        leftTail.position.set(-0.65, 0.5, -2.16);
         carGroup.add(leftTail);
 
         const rightTail = leftTail.clone();
-        rightTail.position.set(0.65, 0.5, -2.11);
+        rightTail.position.set(0.65, 0.5, -2.16);
         carGroup.add(rightTail);
 
         return carGroup;
@@ -136,27 +135,21 @@ class TrafficSystem {
         this.vehicles.forEach(npc => {
             let moveDist = npc.speed * dt;
 
-            // Collision Avoidance / Distance checking with Player car
             const distToPlayer = npc.mesh.position.distanceTo(playerPos);
             if (distToPlayer < 8.0) {
-                // Slow down or stop to avoid hitting player
                 npc.speed = Math.max(0, npc.speed - dt * 25.0);
             } else {
-                // Accelerate back to normal lane speed
                 npc.speed = Math.min(npc.targetSpeed, npc.speed + dt * 5.0);
             }
 
-            // Move vehicle along its assigned heading orientation
             if (npc.lane.type === 'H') {
                 npc.mesh.position.x += npc.lane.dir * npc.speed * dt;
             } else {
                 npc.mesh.position.z += npc.lane.dir * npc.speed * dt;
             }
 
-            // Recycle / Respawn vehicle when too far from player
             const currentDist = npc.mesh.position.distanceTo(playerPos);
             if (currentDist > 220) {
-                // Teleport ahead of player in drive direction
                 if (npc.lane.type === 'H') {
                     npc.mesh.position.x = playerPos.x + npc.lane.dir * 180 + (Math.random() - 0.5) * 40;
                     npc.mesh.position.z = npc.lane.z;

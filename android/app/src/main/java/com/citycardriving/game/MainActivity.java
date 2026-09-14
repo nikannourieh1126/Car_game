@@ -19,7 +19,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Hide navigation and status bar for immersive full screen
         hideSystemUI();
 
         webView = new WebView(this);
@@ -32,7 +31,6 @@ public class MainActivity extends Activity {
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setMediaPlaybackRequiresUserGesture(false);
 
-        // Hardware Acceleration
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         webView.setWebViewClient(new WebViewClient() {
@@ -65,7 +63,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Forward Gamepad Key & Motion Events directly to WebGL Engine
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||

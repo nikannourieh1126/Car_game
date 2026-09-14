@@ -46,7 +46,6 @@ server.listen(8086, async () => {
 
             const initialMode = trans.mode; // 'AUTO'
 
-            // Apply throttle for 60 physics steps
             car.throttleInput = 1.0;
             const dt = 0.016;
             for (let i = 0; i < 60; i++) {
@@ -56,13 +55,11 @@ server.listen(8086, async () => {
             const speedAuto = car.getSpeedKmH();
             const rpmAuto = trans.rpm;
 
-            // Switch to Manual Mode
             trans.toggleMode();
             const manualMode = trans.mode; // 'MANUAL'
 
-            // Shift up manual gear
             trans.shiftUp();
-            const gearManual = trans.getGearName(); // 'M2'
+            const gearManual = trans.getGearName(); // 'M2' or 'M3'
 
             return {
                 initialMode,

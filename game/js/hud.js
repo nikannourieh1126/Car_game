@@ -3,7 +3,6 @@ class HUD {
     constructor(game) {
         this.game = game;
 
-        // HUD Elements
         this.btnToggleTrans = document.getElementById('btn-toggle-trans');
         this.btnCameraSwitch = document.getElementById('btn-camera-switch');
         this.btnShiftUp = document.getElementById('btn-shift-up');
@@ -17,11 +16,9 @@ class HUD {
         this.gearDisplayEl = document.getElementById('gear-display');
         this.trafficCountEl = document.getElementById('traffic-count');
 
-        // Minimap Canvas
         this.minimapCanvas = document.getElementById('minimap-canvas');
         this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null;
 
-        // Touch Steering & Pedals State
         this.touchAccel = false;
         this.touchBrake = false;
         this.touchSteer = 0;
@@ -30,7 +27,6 @@ class HUD {
     }
 
     initEventListeners() {
-        // Transmission Toggle
         if (this.btnToggleTrans) {
             this.btnToggleTrans.addEventListener('click', () => {
                 const mode = this.game.transmission.toggleMode();
@@ -48,14 +44,12 @@ class HUD {
             });
         }
 
-        // Camera Switch
         if (this.btnCameraSwitch) {
             this.btnCameraSwitch.addEventListener('click', () => {
                 this.game.switchCamera();
             });
         }
 
-        // Gear Shift Up / Down
         if (this.btnShiftUp) {
             this.btnShiftUp.addEventListener('click', () => {
                 this.game.transmission.shiftUp();
@@ -67,7 +61,6 @@ class HUD {
             });
         }
 
-        // Touch Controls setup for mobile touchscreen
         this.initTouchControls();
     }
 
@@ -92,7 +85,6 @@ class HUD {
 
         if (wheelContainer) {
             let dragging = false;
-            let startX = 0;
 
             const handleMove = (clientX) => {
                 const rect = wheelContainer.getBoundingClientRect();
@@ -120,7 +112,6 @@ class HUD {
                 if (wheelVisual) wheelVisual.style.transform = 'rotate(0deg)';
             });
 
-            // Mouse fallback for browser testing
             wheelContainer.addEventListener('mousedown', (e) => { dragging = true; handleMove(e.clientX); });
             window.addEventListener('mousemove', (e) => { if (dragging) handleMove(e.clientX); });
             window.addEventListener('mouseup', () => {
@@ -139,19 +130,16 @@ class HUD {
         const rpm = Math.round(transmission.rpm);
         const gearName = transmission.getGearName();
 
-        // Speedometer & Tachometer Digital Text
         if (this.speedValueEl) this.speedValueEl.textContent = speedKmh;
         if (this.rpmValueEl) this.rpmValueEl.textContent = rpm;
         if (this.gearDisplayEl) this.gearDisplayEl.textContent = gearName;
         if (this.trafficCountEl && traffic) this.trafficCountEl.textContent = traffic.vehicles.length;
 
-        // Circular Gauge Arc calculations (Max arc perimeter = 264)
         if (this.rpmArcEl) {
             const rpmPercent = Math.min(1.0, rpm / transmission.maxRpm);
-            const dashOffset = 264 * (1 - rpmPercent * 0.75); // 270 deg gauge arc
+            const dashOffset = 264 * (1 - rpmPercent * 0.75);
             this.rpmArcEl.style.strokeDashoffset = dashOffset;
 
-            // Redline warning color change
             if (rpm > 6500) {
                 this.rpmArcEl.style.stroke = '#ff0055';
             } else {
@@ -160,12 +148,11 @@ class HUD {
         }
 
         if (this.speedArcEl) {
-            const speedPercent = Math.min(1.0, speedKmh / 260); // 0 to 260 km/h scale
+            const speedPercent = Math.min(1.0, speedKmh / 260);
             const dashOffset = 264 * (1 - speedPercent * 0.75);
             this.speedArcEl.style.strokeDashoffset = dashOffset;
         }
 
-        // Draw Mini-Map Radar
         this.renderMinimap(car, traffic);
     }
 
@@ -175,11 +162,10 @@ class HUD {
         const ctx = this.minimapCtx;
         const w = this.minimapCanvas.width;
         const h = this.minimapCanvas.height;
-        const scale = 0.6; // Radar zoom factor
+        const scale = 0.6;
 
         ctx.clearRect(0, 0, w, h);
 
-        // Dark Radar background grid
         ctx.fillStyle = 'rgba(10, 18, 32, 0.9)';
         ctx.fillRect(0, 0, w, h);
 
@@ -190,9 +176,8 @@ class HUD {
         ctx.arc(w / 2, h / 2, 50, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Draw AI Traffic vehicles on Radar
         if (traffic && traffic.vehicles) {
-            ctx.fillStyle = '#ff9800'; // Orange dots for AI traffic
+            ctx.fillStyle = '#ff9800';
             traffic.vehicles.forEach(npc => {
                 const relX = (npc.mesh.position.x - car.position.x) * scale;
                 const relZ = (npc.mesh.position.z - car.position.z) * scale;
@@ -208,7 +193,6 @@ class HUD {
             });
         }
 
-        // Draw Player Car Icon (Cyan Arrow) in Center
         ctx.save();
         ctx.translate(w / 2, h / 2);
         ctx.rotate(-car.rotation);
