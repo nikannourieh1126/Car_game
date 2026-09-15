@@ -7,6 +7,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -14,6 +15,9 @@ import android.webkit.WebViewClient;
 public class MainActivity extends Activity {
 
     private WebView webView;
+    private float steerAxis = 0f;
+    private float throttleVal = 0f;
+    private float brakeVal = 0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,9 @@ public class MainActivity extends Activity {
 
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
+        // Native Gamepad JavaScript Bridge
+        webView.addJavascriptInterface(new WebAppInterface(), "AndroidGamepad");
+
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -41,6 +48,17 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl("file:///android_asset/game/index.html");
+    }
+
+    public class WebAppInterface {
+        @JavascriptInterface
+        public float getSteer() { return steerAxis; }
+
+        @JavascriptInterface
+        public float getThrottle() { return throttleVal; }
+
+        @JavascriptInterface
+        public float getBrake() { return brakeVal; }
     }
 
     private void hideSystemUI() {
@@ -67,7 +85,12 @@ public class MainActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
             (event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
-            webView.dispatchKeyEvent(event);
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_A) throttleVal = 1.0f;
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_B) brakeVal = 1.0f;
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_R1) webView.evaluateJavascript("if(window.gameInstance) window.gameInstance.transmission.shiftUp();", null);
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_L1) webView.evaluateJavascript("if(window.gameInstance) window.gameInstance.transmission.shiftDown();", null);
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_Y) webView.evaluateJavascript("if(window.gameInstance) window.gameInstance.switchCamera();", null);
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_SELECT) webView.evaluateJavascript("if(window.gameInstance) window.gameInstance.transmission.toggleMode();", null);
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -77,7 +100,8 @@ public class MainActivity extends Activity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD ||
             (event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK) {
-            webView.dispatchKeyEvent(event);
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_A) throttleVal = 0.0f;
+            if (keyCode == KeyEvent.KEYCODE_BUTTON_B) brakeVal = 0.0f;
             return true;
         }
         return super.onKeyUp(keyCode, event);
@@ -87,7 +111,11 @@ public class MainActivity extends Activity {
     public boolean onGenericMotionEvent(MotionEvent event) {
         if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK &&
             event.getAction() == MotionEvent.ACTION_MOVE) {
-            webView.dispatchGenericMotionEvent(event);
+            steerAxis = event.getAxisValue(MotionEvent.AXIS_X);
+            float rTrigger = event.getAxisValue(MotionEvent.AXIS_RTRIGGER);
+            float lTrigger = event.getAxisValue(MotionEvent.AXIS_LTRIGGER);
+            if (rTrigger > 0.05f) throttleVal = rTrigger;
+            if (lTrigger > 0.05f) brakeVal = lTrigger;
             return true;
         }
         return super.onGenericMotionEvent(event);

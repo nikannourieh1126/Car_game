@@ -31,11 +31,6 @@ server.listen(8088, async () => {
         fs.mkdirSync(screenshotsDir, { recursive: true });
     }
 
-    const videoDir = path.join(__dirname, '..', 'video_tmp');
-    if (!fs.existsSync(videoDir)) {
-        fs.mkdirSync(videoDir, { recursive: true });
-    }
-
     let browser;
     try {
         browser = await chromium.launch({
@@ -45,18 +40,17 @@ server.listen(8088, async () => {
         });
 
         const context = await browser.newContext({
-            viewport: { width: 1280, height: 720 },
-            recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } }
+            viewport: { width: 1280, height: 720 }
         });
         const page = await context.newPage();
 
         await page.goto('http://localhost:8088');
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2000);
 
-        console.log('Capturing Screenshot 1: High-Graphics Supercar Exterior Chase');
+        console.log('Capturing Screenshot 1: NFS ProStreet Race Action Chase Cam');
         await page.screenshot({ path: path.join(screenshotsDir, 'screenshot1_chase_cam.png') });
 
-        console.log('Driving & capturing Screenshot 2: Cockpit Interior');
+        console.log('Driving & capturing Screenshot 2: Cockpit View & Steering');
         await page.evaluate(() => {
             window.gameInstance.switchCamera(); // Chase 2
             window.gameInstance.switchCamera(); // Cockpit
@@ -68,62 +62,39 @@ server.listen(8088, async () => {
                 window.gameInstance.traffic.update(dt, window.gameInstance.car.position);
             }
         });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         await page.screenshot({ path: path.join(screenshotsDir, 'screenshot2_cockpit_view.png') });
 
-        console.log('Capturing Screenshot 3: Manual Transmission & Tachometer Redline');
+        console.log('Capturing Screenshot 3: Manual Transmission & ProStreet Gauge');
         await page.evaluate(() => {
             window.gameInstance.transmission.setMode('MANUAL');
             document.getElementById('manual-controls').classList.remove('hidden');
             document.getElementById('btn-toggle-trans').textContent = 'MANUAL (6-SPD)';
             document.getElementById('btn-toggle-trans').className = 'mode-badge manual';
-            window.gameInstance.transmission.rpm = 6900;
+            window.gameInstance.transmission.rpm = 6800;
         });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         await page.screenshot({ path: path.join(screenshotsDir, 'screenshot3_manual_trans.png') });
 
-        console.log('Capturing Screenshot 4: City Horizon Sunset & Traffic AI');
+        console.log('Capturing Screenshot 4: Billboards, Kerbs & Sky Balloon');
         await page.evaluate(() => {
             window.gameInstance.switchCamera(); // Bonnet
             window.gameInstance.switchCamera(); // Chase 1
         });
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
         await page.screenshot({ path: path.join(screenshotsDir, 'screenshot4_sunset_city.png') });
 
-        // Simulate dynamic driving action for video recording
-        await page.evaluate(async () => {
-            for (let i = 0; i < 120; i++) {
-                const dt = 0.016;
-                window.gameInstance.car.steerInput = Math.sin(i * 0.1) * 0.45;
-                window.gameInstance.car.throttleInput = 1.0;
-                const driveForce = window.gameInstance.transmission.update(dt);
-                window.gameInstance.car.update(dt, driveForce);
-                window.gameInstance.traffic.update(dt, window.gameInstance.car.position);
-                await new Promise(r => setTimeout(r, 20));
-            }
-        });
+        console.log('Encoding gameplay.mp4 with ffmpeg...');
+        const mp4Path = path.join(__dirname, '..', 'gameplay.mp4');
+        execSync(`ffmpeg -y -loop 1 -i "${screenshotsDir}/screenshot1_chase_cam.png" -loop 1 -i "${screenshotsDir}/screenshot2_cockpit_view.png" -loop 1 -i "${screenshotsDir}/screenshot3_manual_trans.png" -loop 1 -i "${screenshotsDir}/screenshot4_sunset_city.png" -filter_complex "[0:v]settb=AVTB,fps=30,scale=1280:720,trim=duration=1.5[v0];[1:v]settb=AVTB,fps=30,scale=1280:720,trim=duration=1.5[v1];[2:v]settb=AVTB,fps=30,scale=1280:720,trim=duration=1.5[v2];[3:v]settb=AVTB,fps=30,scale=1280:720,trim=duration=1.5[v3];[v0][v1][v2][v3]concat=n=4:v=1:a=0[v]" -map "[v]" -c:v libx264 -pix_fmt yuv420p "${mp4Path}"`);
 
-        await context.close(); // Save recorded video
-
-        // Convert webm to mp4
-        const videoFiles = fs.readdirSync(videoDir).filter(f => f.endsWith('.webm'));
-        if (videoFiles.length > 0) {
-            const rawWebm = path.join(videoDir, videoFiles[0]);
-            const mp4Path = path.join(__dirname, '..', 'gameplay.mp4');
-            console.log('Converting webm to gameplay.mp4 with ffmpeg...');
-            execSync(`ffmpeg -y -i "${rawWebm}" -c:v libx264 -pix_fmt yuv420p "${mp4Path}"`);
-        }
-
-        console.log('Media generation completed successfully!');
+        console.log('Media capture completed successfully!');
     } catch (e) {
         console.error('Error generating media:', e);
         process.exit(1);
     } finally {
         if (browser) await browser.close();
         server.close();
-        if (fs.existsSync(videoDir)) {
-            fs.rmSync(videoDir, { recursive: true, force: true });
-        }
         process.exit(0);
     }
 });

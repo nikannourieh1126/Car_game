@@ -1,4 +1,4 @@
-/* HTML5 Gamepad & Controller API Integration Module */
+/* HTML5 Gamepad & Native Android Bridge Manager */
 class GamepadManager {
     constructor(game) {
         this.game = game;
@@ -46,6 +46,22 @@ class GamepadManager {
     }
 
     pollInputs() {
+        // First check Native Android Gamepad Bridge if running inside Android App
+        if (window.AndroidGamepad) {
+            try {
+                const steer = window.AndroidGamepad.getSteer();
+                const throttle = window.AndroidGamepad.getThrottle();
+                const brake = window.AndroidGamepad.getBrake();
+                if (Math.abs(steer) > 0.05 || throttle > 0.05 || brake > 0.05) {
+                    this.updateBadge(true, 'Android Gamepad');
+                    return { active: true, steer, throttle, brake };
+                }
+            } catch (e) {
+                // Fallback to standard Gamepad API
+            }
+        }
+
+        // Standard HTML5 Gamepad API fallback
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
         let activeGp = null;
 

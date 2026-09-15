@@ -3,79 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Extreme City Car Driving 3D</title>
+    <title>NFS ProStreet 3D Mobile Driving</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Local Bundled Three.js Engine for Offline Mobile Play -->
     <script src="js/three.min.js"></script>
 </head>
 <body>
     <div id="game-container">
         <canvas id="webgl-canvas"></canvas>
 
-        <!-- Dynamic HUD Overlay -->
+        <!-- NFS ProStreet Racing HUD Overlay -->
         <div id="hud">
-            <!-- Top Bar: Game Info & Transmission Switcher -->
-            <div id="top-bar">
-                <div class="hud-card">
-                    <span class="label">TRANS:</span>
-                    <button id="btn-toggle-trans" class="mode-badge auto">AUTO (PRND)</button>
-                </div>
-                <div class="hud-card">
-                    <span class="label">CAMERA:</span>
-                    <button id="btn-camera-switch" class="btn-action">CHASE 1</button>
-                </div>
-                <div class="hud-card gamepad-status" id="gamepad-badge">
+            <!-- Top Left: Leaderboard Standings Panel -->
+            <div id="leaderboard">
+                <div class="lb-title">RACE STANDINGS</div>
+                <div class="lb-row">1. CHET HIGGENS</div>
+                <div class="lb-row">2. ATSUSHI MURAGUCHI</div>
+                <div class="lb-row player">3. RYAN COOPER (YOU)</div>
+                <div class="lb-row">4. SHINJI TAKASU</div>
+                <div class="lb-row">5. FELIX TANG</div>
+            </div>
+
+            <!-- Top Center: Laptime & Lap Counter -->
+            <div id="laptime-card">
+                <div class="laptime-header">LAPTIME:</div>
+                <div class="laptime-val" id="lap-time">00:15.72</div>
+                <div class="lap-counter">LAP: <span id="current-lap">2/3</span></div>
+            </div>
+
+            <!-- Top Right: Camera & Transmission Buttons & Gamepad Status -->
+            <div id="top-right-bar">
+                <button id="btn-toggle-trans" class="mode-badge auto">AUTO (PRND)</button>
+                <button id="btn-camera-switch" class="btn-action">CHASE 1</button>
+                <div class="gamepad-status" id="gamepad-badge">
                     <span class="dot"></span> <span id="gamepad-name">TOUCH / KEYBOARD</span>
                 </div>
             </div>
 
-            <!-- Mini Map (Top Left) -->
+            <!-- Bottom Left: Circuit Minimap -->
             <div id="minimap-container">
-                <canvas id="minimap-canvas" width="120" height="120"></canvas>
+                <canvas id="minimap-canvas" width="130" height="130"></canvas>
             </div>
 
-            <!-- Speedometer & Tachometer Cluster (Bottom Center) -->
-            <div id="cluster">
-                <div class="gauge tachometer">
-                    <svg viewBox="0 0 100 100">
-                        <circle class="bg" cx="50" cy="50" r="42"></circle>
-                        <circle id="rpm-arc" class="value" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
-                    </svg>
-                    <div class="gauge-value">
-                        <span id="rpm-value">0</span>
-                        <span class="unit">RPM</span>
-                    </div>
-                </div>
-
-                <div class="digital-center">
-                    <div id="gear-display" class="gear-badge">D</div>
-                    <div id="speed-value" class="speed-number">0</div>
-                    <div class="speed-unit">KM/H</div>
-                </div>
-
-                <div class="gauge speedometer">
-                    <svg viewBox="0 0 100 100">
-                        <circle class="bg" cx="50" cy="50" r="42"></circle>
-                        <circle id="speed-arc" class="value" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
-                    </svg>
-                    <div class="gauge-value">
-                        <span id="traffic-count">24</span>
-                        <span class="unit">CARS</span>
+            <!-- Bottom Right: Analog Dial Tachometer / Digital Speedometer -->
+            <div id="nfs-dial">
+                <svg viewBox="0 0 120 120" class="dial-svg">
+                    <circle class="dial-bg" cx="60" cy="60" r="50"></circle>
+                    <circle id="rpm-arc" class="dial-val" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                </svg>
+                <div class="dial-center">
+                    <div id="gear-display" class="dial-gear">D</div>
+                    <div id="speed-value" class="dial-speed">0</div>
+                    <div class="dial-unit">KM/H</div>
+                    <div class="nfs-badges">
+                        <span class="status-badge active">ABS</span>
+                        <span class="status-badge active">SM</span>
+                        <span class="status-badge active">TC</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Manual Transmission Gear Buttons (Hidden in Auto Mode) -->
+            <!-- Manual Gear Shift Controls -->
             <div id="manual-controls" class="hidden">
                 <button id="btn-shift-up" class="shift-btn">+ GEAR</button>
                 <button id="btn-shift-down" class="shift-btn">- GEAR</button>
-                <div class="clutch-bar-container">
-                    <div class="clutch-label">CLUTCH</div>
-                    <div id="clutch-fill" class="clutch-fill"></div>
-                </div>
             </div>
 
-            <!-- Touch Steering & Pedals Controls (For Mobile) -->
+            <!-- Touch Steering & Pedals for Mobile -->
             <div id="touch-controls">
                 <div id="touch-steering-container">
                     <div id="touch-wheel"></div>
@@ -87,14 +80,12 @@
                 </div>
             </div>
 
-            <!-- Gamepad Hint Overlay -->
             <div id="gamepad-hint" class="hud-hint">
                 <span>🎮 <b>Gamepad Connected!</b> LS: Steer | RT: Gas | LT: Brake | RB/LB: Gear Shift | Y: Camera</span>
             </div>
         </div>
     </div>
 
-    <!-- Core Game Scripts -->
     <script src="js/city.js"></script>
     <script src="js/car.js"></script>
     <script src="js/transmission.js"></script>
